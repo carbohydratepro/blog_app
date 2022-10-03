@@ -28,8 +28,44 @@ docker-compose run web bundle install
 
 docker-compose run web bundle exec rake app:update:bin
 
-### 1-5. localhost:3000にアクセス
-Railsの画面が表示されていれば成功
+docker-compose run web rails webpacker:install
+
+### 1-6. config/webpack/environment.jsを以下のように編集。
+```javascript
+const { environment } = require('@rails/webpacker')
+
+const { VueLoaderPlugin } = require('vue-loader')
+ environment.plugins.prepend(
+     'VueLoaderPlugin',
+     new VueLoaderPlugin()
+)
+
+environment.loaders.prepend('vue', {
+    test: /\.vue$/,
+    use: [{
+        loader: 'vue-loader'
+    }]
+})
+
+module.exports = environment
+```
+
+### 1-7. config/webpacker.ymlにvueを追加
+```yml
+    ：
+    
+extensions:
+  - .vue
+  - .mjs
+  - .js
+  
+    ：
+```
+
+### 1-8. localhost:3000/blogs/inexにアクセス
+以下のように表示されていれば成功
+#### Blogs#index
+hello, Vue.js 3.0
 
 # 2. 参考サイト
 ### Railsその他諸々の環境構築
