@@ -1,4 +1,4 @@
-FROM ruby:2.7.4
+FROM ruby:2.7.6
 
 #apt-keyとdevconfのエラー対策
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=DontWarn
