@@ -1,20 +1,50 @@
-version: '3'
+version: '3.8'
 services:
+  rails: &rails
+    container_name: blog_app-rails
+    build: # 実行したときにビルドされるときのpath
+      context: .
+      dockerfile: containers/rails/Dockerfile
+      # args:
+      #   - APP_ROOT=/intern-2022
+      #   - UID=${UID:-999}
+      #   - GID=${GID:-999}
+    command: containers/rails/entrypoint.sh
+    volumes:
+      - .:/blog_app
+      # - bundle:/usr/local/bundle # Composefileからみた相対パスでbundleが呼び出されたら、ローカルのbundleファイルを指定して実行。これにより、ローカルで実行したbundle installの内容が永続化(=変更内容の適用)される。
+    environment: # DataBaseについての環境変数設定
+      POSTGRES_HOST: db
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      WEBPACKER_DEV_SERVER_HOST: webpacker
+    ports: # DataBaseのDockerImageを立ち上げる際のポート番号
+      - "3000:3000"
+    depends_on: # Service同士の依存関係
+      - db # (Service)railsよりも先にdbを実行
+
+  webpacker:
+    <<: *rails # railsから継承
+    container_name: blog_app-webpacker
+    command: containers/webpacker/entrypoint.sh
+    environment: # DataBaseについての環境変数設定
+      WEBPACKER_DEV_SERVER_HOST: 0.0.0.0
+      WEBPACKER_DEV_SERVER_INLINE: "true"
+      WEBPACKER_DEV_SERVER_HMR: "false"
+      CHOKIDAR_USEPOLLING: "true"
+    ports: # DataBaseのDockerImageを立ち上げる際のポート番号
+      - "3035:3035"
+
   db:
     image: postgres
     container_name: blog_app-db
     volumes:
       - ./tmp/db:/var/lib/postgresql/data
-    environment:
+    environment: # DataBaseについての環境変数設定
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
       POSTGRES_HOST_AUTH_METHOD: 'trust'
+      POSTGRES_PORT: 5432 # POSTGRESのデフォルトポートを設定
+    ports: # DataBaseのDockerImageを立ち上げる際のポート番号
+      - "5432:5432"
 
-  web:
-    build: .
-    container_name: blog_app-web
-    command: bash -c "rm -f tmp/pids/server.pid && rails s -p 3000 -b '0.0.0.0'"
-    volumes:
-      - .:/blog_app
-    ports:
-      - "3000:3000"
-    depends_on:
-      - db

@@ -1,4 +1,11 @@
 Rails.application.routes.draw do
-  get 'blogs/index'
-  # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
+  get '/', to: 'main#index', as: 'main'
+
+  namespace 'api' do
+    namespace 'v1' do
+      resources :blogs, only: [:index, :create, :show]
+
+    end
+  end
 end
+
